@@ -1,0 +1,93 @@
+not live, excitement 1.0, game asks stand cheer (7): standing 0/60
+tip-off (live, first 45 s): standing 0/60
+live after tip-off: standing 0/60
+=== MEN
+normal play (situation 2)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 1:58 2:2   standing 0%
+   game asks 3 -> 1:28 2:27 3:5   standing 0%
+   game asks 8 -> 1:28 2:27 3:5   standing 0%
+   game asks 15 -> 1:58 2:2   standing 0%
+scoring reaction (situation 3)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 1:28 2:27 3:5   standing 0%
+   game asks 3 -> 1:28 2:27 3:5   standing 0%
+   game asks 8 -> 1:28 2:27 3:5   standing 0%
+   game asks 15 -> 1:28 2:27 3:5   standing 0%
+chant (situation 15)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 1:58 2:2   standing 0%
+   game asks 3 -> 1:28 2:27 3:5   standing 0%
+   game asks 8 -> 1:28 2:27 3:5   standing 0%
+   game asks 15 -> 1:58 2:2   standing 0%
+big moment (situation 7)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 2:17 3:13 7:30   standing 50%
+   game asks 3 -> 2:17 3:13 7:30   standing 50%
+   game asks 8 -> 2:17 3:13 7:30   standing 50%
+   game asks 15 -> 2:17 3:13 7:30   standing 50%
+
+=== WOMEN
+normal play (situation 2)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 1:58 2:2   standing 0%
+   game asks 3 -> 1:28 2:27 3:5   standing 0%
+   game asks 8 -> 1:28 2:27 3:5   standing 0%
+   game asks 15 -> 1:58 2:2   standing 0%
+scoring reaction (situation 3)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 1:28 2:27 3:5   standing 0%
+   game asks 3 -> 1:28 2:27 3:5   standing 0%
+   game asks 8 -> 1:28 2:27 3:5   standing 0%
+   game asks 15 -> 1:28 2:27 3:5   standing 0%
+chant (situation 15)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 1:58 2:2   standing 0%
+   game asks 3 -> 1:28 2:27 3:5   standing 0%
+   game asks 8 -> 1:28 2:27 3:5   standing 0%
+   game asks 15 -> 1:58 2:2   standing 0%
+big moment (situation 7)
+   game asks 1 -> 1:60   standing 0%
+   game asks 2 -> 2:17 3:13 7:30   standing 50%
+   game asks 3 -> 2:17 3:13 7:30   standing 50%
+   game asks 8 -> 2:17 3:13 7:30   standing 50%
+   game asks 15 -> 2:17 3:13 7:30   standing 50%
+
+calm hold: asked 'disappointed' 3 s after sitting down -> stayed seated 60/60; 16 s after -> head-in-hands 60/60
+period-end buzzer (game asks idle): standing 0/60, seated cheer/clap 0/60
+8 s later: not seated idle 0/60
+shot-clock buzzer (game asks applause): standing 0/60  buzzers counted 0
+big moment, game asks towel: props regular season 0/60, playoffs 3/60
+
+normal play, game asks idle: stand 0 head 0 hands-up 0 clap 0 seated 60   [-]
+normal play, game asks cheer: stand 0 head 0 hands-up 0 clap 0 seated 60   [-]
+home basket: stand 0 head 0 hands-up 4 clap 27 seated 29   [home basket]
+home three: stand 0 head 0 hands-up 8 clap 33 seated 19   [home three]
+away basket, game asks cheer: stand 0 head 3 hands-up 0 clap 0 seated 57   [away basket]
+home basket + game 'big play' code (dunk): stand 19 head 0 hands-up 12 clap 24 seated 5   [home dunk (amazed)]
+away basket + 'big play' code (away dunk): stand 0 head 30 hands-up 0 clap 0 seated 30   [away dunk/and-one (disbelief)]
+home basket, clock stops (and-one): stand 21 head 0 hands-up 15 clap 19 seated 5   [home AND-ONE (amazed)]
+shot clock horn only: stand 0 head 0 hands-up 0 clap 0 seated 60   [-]
+three goes in after the shot-clock horn: stand 34 head 0 hands-up 15 clap 11 seated 0   [WOW: home three after the horn]
+end-of-quarter horn only: stand 0 head 0 hands-up 0 clap 0 seated 60   [-]
+2 goes in after the quarter horn: stand 25 head 0 hands-up 15 clap 18 seated 2   [WOW: home shot after the horn]
+halftime start: crowd shown 85% -> after 30 s of halftime 47%
+3rd quarter: tip 47%, 1:30 in 56%, 3:40 in 70%, 7:00 in 85%
+4th, home +10 -> +8 (opp 2-0 run): stand 0 head 3 hands-up 0 clap 0 seated 57   [away basket]
+4th, +8 -> +5 (opp 5-0 run): stand 0 head 25 hands-up 0 clap 0 seated 35   [UPSET: opponent catching up]
+4th, +5 -> +2 (opp 8-0 run): stand 0 head 30 hands-up 0 clap 0 seated 30   [UPSET: opponent catching up]
+4th, home answers (+4), close: stand 10 head 0 hands-up 7 clap 27 seated 16   [home basket]
+4th, opp takes the lead (-1): stand 0 head 40 hands-up 0 clap 0 seated 20   [UPSET: opponent catching up]
+4th, 1:40 left, tied, game asks idle: stand 29 head 0 hands-up 0 clap 0 seated 31   [-]
+4th, 0:20 left, tied: stand 45 head 0 hands-up 0 clap 0 seated 15   [-]
+4th, 0:20 left, home goes +2: stand 45 head 0 hands-up 7 clap 8 seated 0   [home basket]
+final horn, home wins by 2 (right at the horn): stand 52 head 0 hands-up 6 clap 2 seated 0   [HOME WIN]
+4 s later: stand 52 head 0 hands-up 6 clap 2 seated 0   [HOME WIN]
+34 s later: stand 52 head 0 hands-up 6 clap 2 seated 0   [HOME WIN]
+home three in right after the final horn: stand 34 head 0 hands-up 15 clap 11 seated 0   [WOW: home three after the horn]
+3 s after the horn: buzzer beater wins the game: stand 54 head 0 hands-up 5 clap 1 seated 0   [BUZZER BEATER WIN]
+final horn, home loses by 3: stand 0 head 54 hands-up 0 clap 0 seated 6   [home loss]
+final horn, home wins by 14: stand 25 head 0 hands-up 6 clap 26 seated 3   [HOME WIN]
+4th, opponent +22: crowd shown 85% -> after 60 s 71%
+4th, home leads: crowd shown 71% (stays, nobody comes back)
+in-memory gate: records set 152, correct 152, wrong 0
