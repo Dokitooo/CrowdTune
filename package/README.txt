@@ -56,6 +56,9 @@ TUNING WITH THE LOG
 CrowdTune.log writes a line every 2 s while the crowd is active: excitement, situation code, phase,
 asked/given per mood group and what the 60 channels play. Every crowd reaction also gets its own
 "REACTION" line (what it was, game clock, shot clock, the game's situation code, quarter and score).
+A "perf:" line every LogEverySeconds shows the time CrowdTune itself used (microseconds) and the
+longest gap between two crowd updates (= the slowest frame), also the slowest one within 1 s of a
+reaction. Log lines are written by CrowdTune's own thread, never by the game's.
   Mood groups (men|women): 1 sit idle, 6 stand idle, 2 applause, 3 sit cheer, 7 stand cheer,
   4 sit sad, 5 stand sad. Both: 8 towel, 9 thunder sticks, 10 foam finger, 11 sign, 15-17 chants.
 

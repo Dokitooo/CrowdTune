@@ -274,7 +274,11 @@ static int set_of(const u8 *ch)      /* 0 men, 1 women, -1 unknown set (special 
     u32 s = *(const u32 *)(ch + 0x10), p, n;
     if (s > 1) return -1;
     p = *(const u32 *)(G_SETS + 4 * s);
-    if (!p || !readable((void *)p, 8)) return -1;
+    if (!p) return -1;
+    {   /* 1.0 perf: VirtualQuery only when the set pointer changes (it is the same for a whole game) */
+        static u32 okp[2];
+        if (okp[s] != p) { if (!readable((void *)p, 8)) return -1; okp[s] = p; }
+    }
     n = *(const u32 *)(p + 4);
     if (s == 0 && n == 601) return 0;          /* stock crowdren1 */
     if (s == 1 && n == 93) return 1;           /* stock crowdfemren1 */
@@ -435,11 +439,31 @@ static struct {
     float q4_fill; int q4_init;
     u32 events_seen;
 } G;
+/* 1.0 perf: lines from the game thread go through this queue; the log thread writes them (no file I/O
+   on the game thread when the crowd reacts) */
+#define RQ_N 16
+static char g_rq[RQ_N][200]; static volatile long g_rq_head, g_rq_tail;
+static void rq_push(const char *l)
+{
+    long h = g_rq_head;
+    if (h - g_rq_tail >= RQ_N) return;                    /* full: drop (log only) */
+    s_cpy(g_rq[h % RQ_N], l, 200); g_rq_head = h + 1;
+}
+static void rq_drain(void)
+{
+    while (g_rq_tail != g_rq_head) { logs(g_rq[g_rq_tail % RQ_N], 0, 0); g_rq_tail++; }
+}
+/* 1.0 perf: time spent in CrowdTune's crowd code and the game's frame time (between two crowd updates) */
+static LARGE_INTEGER g_qf; static double g_qus;
+static volatile u32 g_pf_calls, g_pf_max, g_pf_sum;    /* microseconds */
+static volatile u32 g_fr_max, g_fr_ev_max;             /* longest frame (ms x10), longest one within 1 s of a reaction */
+static double g_fr_last_q; static u32 g_ev_at;
+static double qus(void) { LARGE_INTEGER t; QueryPerformanceCounter(&t); return ((double)t.HighPart * 4294967296.0 + (double)t.LowPart) * g_qus; }
 static void fire(int ev, u32 now)
 {
     if (ev <= EV_NONE || ev >= EV_N) return;
     if (G.ev && (int)(G.ev_until - now) > 0 && ev < G.ev) return;   /* a bigger reaction is running */
-    G.ev = ev; G.mix = k_mix[ev]; G.ev_until = now + k_mix[ev].ms; G.events_seen++;
+    G.ev = ev; G.mix = k_mix[ev]; G.ev_until = now + k_mix[ev].ms; G.events_seen++; g_ev_at = now;
     {   /* 1.0 fix: every reaction in the log with what triggered it */
         char l[200], t[16];
         l[0] = 0; s_cat(l, "REACTION ", 200); s_cat(l, k_ev_name[ev], 200);
@@ -448,7 +472,7 @@ static void fire(int ev, u32 now)
         s_cat(l, "  situation ", 200); u2d(g_sit, t); s_cat(l, t, 200);
         s_cat(l, "  Q", 200); u2d((u32)G.period, t); s_cat(l, t, 200);
         s_cat(l, " ", 200); u2d((u32)G.hs, t); s_cat(l, t, 200); s_cat(l, "-", 200); u2d((u32)G.as, t); s_cat(l, t, 200);
-        logs(l, 0, 0);
+        rq_push(l);
     }
     G.salt = (G.salt + 17u + (now % 41u)) % 60u;       /* a different part of the arena reacts each time */
     if (ev == EV_WIN) {
@@ -633,6 +657,17 @@ static float q4_fill(float game_level, u32 now)
 float __cdecl ct_fill(void)
 {
     float f = *(const float *)G_EXCITE;
+    {   /* frame time = time between two crowd updates (0.1 ms units) */
+        double q = qus();
+        if (g_fr_last_q > 0.0) {
+            double e = (q - g_fr_last_q) / 100.0; u32 fr = (e > 0.0 && e < 50000.0) ? (u32)(int)e : 0u;
+            if (fr) {
+                if (fr > g_fr_max) g_fr_max = fr;
+                if (g_ev_at && GetTickCount() - g_ev_at < 1000u && fr > g_fr_ev_max) g_fr_ev_max = fr;
+            }
+        }
+        g_fr_last_q = q;
+    }
     if (C.events && G.key && G.period >= 4 && G.valid) f = q4_fill(f, GetTickCount());
     else {
         G.q4_init = 0;
@@ -716,7 +751,14 @@ static int mix_group(int set, float r, const MIX *m, float tense, int cls, int g
  *   and close finishes -> the big ones; the opponent's baskets -> quiet.
  *   no event: everybody seated and quiet (CalmHoldSeconds), standing in a close finish. */
 static int g_big_prev; static u32 g_big_at;
+static int ct_policy_body(u8 *ch, int g);
 int __cdecl ct_policy(u8 *ch, int g)
+{
+    double t0 = qus(); int r = ct_policy_body(ch, g); u32 d;
+    { double e = qus() - t0; d = (e > 0.0 && e < 1.0e9) ? (u32)(int)e : 0u; } g_pf_calls++; g_pf_sum += d; if (d > g_pf_max) g_pf_max = d;
+    return r;
+}
+static int ct_policy_body(u8 *ch, int g)
 {
     int set, cls, lvl, po, open = 0, ev = 0;
     float e, r, tense;
@@ -904,6 +946,7 @@ static void log_stats(void)
 
 static DWORD WINAPI init_thread(LPVOID unused)
 {
+    QueryPerformanceFrequency(&g_qf); { double f = (double)g_qf.HighPart * 4294967296.0 + (double)g_qf.LowPart; g_qus = f > 0.0 ? 1000000.0 / f : 0.0; }
     DWORD t0 = GetTickCount(); int a = 0, b = 0;
     (void)unused;
     for (;;) {
@@ -939,10 +982,27 @@ static DWORD WINAPI init_thread(LPVOID unused)
     }
     if (a + b == 5) logs("patched 5 of 5 spots - crowd moods re-mapped, attendance scaled (settings: CrowdTune.ini)", 0, 0);
     else { logd("WARNING patched only ", (u32)(a + b), " of 5 spots"); }
-    for (;;) {
-        u32 n = g_calls;
-        Sleep(C.log_every > 0 ? (DWORD)C.log_every * 1000 : 60000);
-        if (C.log_every > 0 && g_calls != n) log_stats();
+    {
+        u32 n = g_calls, tick = 0;
+        for (;;) {
+            Sleep(250); tick += 250;
+            rq_drain();
+            if (C.log_every > 0 && tick >= (u32)C.log_every * 1000u) {
+                tick = 0;
+                if (g_calls != n) {
+                    char l[200], t[16]; u32 c = g_pf_calls, sm = g_pf_sum, mx = g_pf_max, fm = g_fr_max, fe = g_fr_ev_max;
+                    g_pf_calls = g_pf_sum = g_pf_max = 0; g_fr_max = g_fr_ev_max = 0;
+                    log_stats();
+                    l[0] = 0; s_cat(l, "perf: CrowdTune ", 200); u2d(c, t); s_cat(l, t, 200); s_cat(l, " crowd calls, ", 200);
+                    u2d(sm, t); s_cat(l, t, 200); s_cat(l, " us in all (longest ", 200); u2d(mx, t); s_cat(l, t, 200);
+                    s_cat(l, " us)  longest gap between two crowd updates (one frame) ", 200); u2d(fm / 10u, t); s_cat(l, t, 200); s_cat(l, ".", 200); u2d(fm % 10u, t); s_cat(l, t, 200);
+                    s_cat(l, " ms", 200);
+                    if (fe) { s_cat(l, " (within 1 s of a reaction: ", 200); u2d(fe / 10u, t); s_cat(l, t, 200); s_cat(l, ".", 200); u2d(fe % 10u, t); s_cat(l, t, 200); s_cat(l, " ms)", 200); }
+                    logs(l, 0, 0);
+                }
+                n = g_calls;
+            }
+        }
     }
 }
 

@@ -22,3 +22,5 @@ EXPORTS
     Sleep@4
     VirtualQuery@12
     WritePrivateProfileStringA@16
+    QueryPerformanceCounter@4
+    QueryPerformanceFrequency@4
