@@ -427,6 +427,7 @@ static struct {
     float clock, shot, qlen;
     int clock_running;
     u32 last_home_fg, last_away_fg, fg_check_at, afg_check_at; float fg_clock, afg_clock; int fg_pts;
+    u32 and1_home, and1_away;       /* 1.0 fix: clock still stopped after the basket = and-one CANDIDATE, confirmed by the free throw */
     u32 end_at, shot0_at; int end_period, beater_pending, beater_pts;
     u32 salt; int away_run, hs_before, as_before, was_close;
     int ev; u32 ev_until; MIX mix;
@@ -439,6 +440,16 @@ static void fire(int ev, u32 now)
     if (ev <= EV_NONE || ev >= EV_N) return;
     if (G.ev && (int)(G.ev_until - now) > 0 && ev < G.ev) return;   /* a bigger reaction is running */
     G.ev = ev; G.mix = k_mix[ev]; G.ev_until = now + k_mix[ev].ms; G.events_seen++;
+    {   /* 1.0 fix: every reaction in the log with what triggered it */
+        char l[200], t[16];
+        l[0] = 0; s_cat(l, "REACTION ", 200); s_cat(l, k_ev_name[ev], 200);
+        s_cat(l, "  clock ", 200); f2s(*(const float *)G_CLOCK, t); s_cat(l, t, 200);
+        s_cat(l, " shot ", 200); f2s(*(const float *)G_SHOT, t); s_cat(l, t, 200);
+        s_cat(l, "  situation ", 200); u2d(g_sit, t); s_cat(l, t, 200);
+        s_cat(l, "  Q", 200); u2d((u32)G.period, t); s_cat(l, t, 200);
+        s_cat(l, " ", 200); u2d((u32)G.hs, t); s_cat(l, t, 200); s_cat(l, "-", 200); u2d((u32)G.as, t); s_cat(l, t, 200);
+        logs(l, 0, 0);
+    }
     G.salt = (G.salt + 17u + (now % 41u)) % 60u;       /* a different part of the arena reacts each time */
     if (ev == EV_WIN) {
         int m = G.hs - G.as;
@@ -498,12 +509,12 @@ static void game_update(u32 now)
 
     /* horns: the end of a period, the shot clock running out. The horn itself gets no reaction - a
        shot released before it that goes in after it does (the score changes up to 3 s later). */
-    if (G.clock > 0.0f && c <= 0.0f && c > -1.0f) {
+    if (G.clock > 0.0f && G.clock < 3.0f && c <= 0.0f && c > -1.0f) {
         G.end_at = now; G.end_period = G.period;
         G.beater_pending = (G.last_home_fg && now - G.last_home_fg < 400) ? 1 : (G.last_away_fg && now - G.last_away_fg < 400) ? -1 : 0;
         if (G.beater_pending == 1) G.beater_pts = G.fg_pts;
         if (G.period >= 4 && hs != as) fire(hs > as ? EV_WIN : EV_LOSS, now);   /* the final horn: no sitting down first */
-    } else if (G.shot > 0.0f && sc <= 0.0f && sc > -1.0f && c > 0.5f) G.shot0_at = now;
+    } else if (G.shot > 0.0f && G.shot < 3.0f && sc <= 0.0f && sc > -1.0f && c > 0.5f) G.shot0_at = now;   /* 1.0 fix: counted down, not reset / switched off */
 
     /* baskets */
     if (dh >= 2) {
@@ -514,7 +525,17 @@ static void game_update(u32 now)
         } else if (G.shot0_at && now - G.shot0_at < 3000) {             /* in after the shot clock ran out */
             fire(dh == 3 ? EV_WOW3 : EV_WOW, now); G.shot0_at = 0; G.fg_check_at = 0;
         } else fire(dh == 3 ? EV_HOME_3 : EV_HOME_2, now);
-    } else if (dh == 1) fire(EV_HOME_FT, now);
+    } else if (dh == 1) {
+        /* 1.0 fix: an and-one is confirmed by its free throw (clock never ran since the basket); a stopped clock
+           alone also happens after plain baskets (replays, timeouts, the game holding the clock) */
+        if (G.and1_home && now - G.and1_home < 45000 && c >= G.fg_clock - 0.02f) fire(EV_AND1, now);
+        else fire(EV_HOME_FT, now);
+        G.and1_home = 0;
+    }
+    if (da == 1) { if (G.and1_away && now - G.and1_away < 45000 && c >= G.afg_clock - 0.02f) fire(EV_AWAY_BIG, now); G.and1_away = 0; }
+    if (dh >= 2 || da >= 2) { G.and1_home = (dh >= 2) ? 0 : G.and1_home; G.and1_away = (da >= 2) ? 0 : G.and1_away; }
+    if (G.and1_home && c < G.fg_clock - 0.02f) G.and1_home = 0;     /* the clock ran: no free throw for that basket */
+    if (G.and1_away && c < G.afg_clock - 0.02f) G.and1_away = 0;
     if (dh > 0) G.away_run = 0;
     if (da > 0) G.away_run += da;
     if (da >= 2) {
@@ -530,12 +551,12 @@ static void game_update(u32 now)
        in the last two minutes of the 4th / overtime) */
     if (G.fg_check_at && (int)(now - G.fg_check_at) >= 0) {
         int late = G.period >= 4 && G.fg_clock <= 120.0f;
-        if (!late && c > 0.5f && c >= G.fg_clock - 0.02f && G.fg_clock > 0.5f) fire(EV_AND1, now);
+        if (!late && c > 0.5f && c >= G.fg_clock - 0.02f && G.fg_clock > 0.5f) G.and1_home = now;   /* 1.0 fix: candidate, see the free throw */
         G.fg_check_at = 0;
     }
     if (G.afg_check_at && (int)(now - G.afg_check_at) >= 0) {
         int late = G.period >= 4 && G.afg_clock <= 120.0f;
-        if (!late && c > 0.5f && c >= G.afg_clock - 0.02f && G.afg_clock > 0.5f) fire(EV_AWAY_BIG, now);
+        if (!late && c > 0.5f && c >= G.afg_clock - 0.02f && G.afg_clock > 0.5f) G.and1_away = now;
         G.afg_check_at = 0;
     }
     /* 3 s after the period horn: 4th quarter / overtime buzzer beaters and the final result */
@@ -694,6 +715,7 @@ static int mix_group(int set, float r, const MIX *m, float tense, int cls, int g
  *   stand; and-one -> disbelief (hands on head) + standing; buzzers -> a reaction; buzzer beaters, wins
  *   and close finishes -> the big ones; the opponent's baskets -> quiet.
  *   no event: everybody seated and quiet (CalmHoldSeconds), standing in a close finish. */
+static int g_big_prev; static u32 g_big_at;
 int __cdecl ct_policy(u8 *ch, int g)
 {
     int set, cls, lvl, po, open = 0, ev = 0;
@@ -717,7 +739,14 @@ int __cdecl ct_policy(u8 *ch, int g)
     cls = k_class[set][g];
     if (C.events && G.ev && (int)(G.ev_until - now) > 0) ev = G.ev;
     /* the game's own "big play" code right after a home basket: a dunk / highlight */
-    if (C.events && in_list(C.big_sit, g_sit)) {
+    {   /* 1.0 fix: the situation code is the last one the game computed for ANY channel and can stay on a big code
+           for a long time - only a big code that STARTS after the basket counts */
+        int big = in_list(C.big_sit, g_sit);
+        if (big && !g_big_prev) g_big_at = now;
+        g_big_prev = big;
+    }
+    if (C.events && in_list(C.big_sit, g_sit) && g_big_at &&
+        ((G.last_home_fg && (int)(g_big_at - G.last_home_fg) >= -250) || (G.last_away_fg && (int)(g_big_at - G.last_away_fg) >= -250))) {
         if (G.last_home_fg && now - G.last_home_fg < 4000 && ev < EV_HOME_BIG) { fire(EV_HOME_BIG, now); ev = G.ev; }
         else if (G.last_away_fg && now - G.last_away_fg < 4000 && ev < EV_AWAY_BIG) { fire(EV_AWAY_BIG, now); ev = G.ev; }
     }

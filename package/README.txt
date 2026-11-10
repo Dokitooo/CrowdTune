@@ -24,7 +24,8 @@ WHAT IT DOES (all settings in CrowdTune.ini)
 - Props (towels, thunder sticks, foam fingers, signs) and chants: playoff games only.
 - The crowd follows the game (score, quarter, game clock, shot clock):
     home basket -> calm seated claps, a three a bit more
-    home dunk / and-one -> amazed: standing, hands up, claps
+    home dunk / and-one -> amazed: standing, hands up, claps (an and-one counts once its free throw
+      goes in; a normal 2 or 3 never gets a standing reaction, except the louder 4th quarter of a close game)
     away dunk / and-one (half the arena) -> disbelief, hands on / behind heads; the rest sits quietly
     shot released before the quarter / shot-clock horn that goes in after it -> WOW (bigger for a
       three); the opponent's -> disbelief. A horn on its own gets no reaction.
@@ -53,7 +54,8 @@ LIMITS
 
 TUNING WITH THE LOG
 CrowdTune.log writes a line every 2 s while the crowd is active: excitement, situation code, phase,
-asked/given per mood group and what the 60 channels play.
+asked/given per mood group and what the 60 channels play. Every crowd reaction also gets its own
+"REACTION" line (what it was, game clock, shot clock, the game's situation code, quarter and score).
   Mood groups (men|women): 1 sit idle, 6 stand idle, 2 applause, 3 sit cheer, 7 stand cheer,
   4 sit sad, 5 stand sad. Both: 8 towel, 9 thunder sticks, 10 foam finger, 11 sign, 15-17 chants.
 
