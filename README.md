@@ -2,13 +2,13 @@
 
 Stock 2K14 fans behave like a soccer end: half the arena stands, claps or waves props during normal possessions. CrowdTune keeps them seated and quiet during normal play, gives routine baskets mild seated applause, and saves the big reactions for the moments that earn them. It follows the score, quarter, game clock and shot clock. Works with the stock `crowd.iff` (a texture-only crowd mod is fine too). It is a [SLAM](https://github.com/Dokitooo/SLAM) mod.
 
-**Download:** [CrowdTune.zip](https://github.com/Dokitooo/CrowdTune/releases/latest/download/CrowdTune.zip) (latest release) ·
+**Download:** [CrowdTune_v1.0.zip](https://github.com/Dokitooo/CrowdTune/releases/download/v1.0/CrowdTune_v1.0.zip) (latest release) ·
 [all releases](https://github.com/Dokitooo/CrowdTune/releases)
 
 ## Requirements
 
 - NBA 2K14 PC
-- [SLAM](https://github.com/Dokitooo/SLAM/releases/latest/download/SLAM.zip) 1.0.0 or newer
+- [SLAM](https://github.com/Dokitooo/SLAM/releases/download/v1.0.0/SLAM_v1.0.0.zip) 1.0.0 or newer
 
 ## Install
 
@@ -59,7 +59,7 @@ Every release lists the SHA-256 of the zip in `SHA256SUMS.txt` (also attached to
 Compare it with the hash of the file you downloaded:
 
 ```powershell
-Get-FileHash .\CrowdTune.zip -Algorithm SHA256
+Get-FileHash .\CrowdTune_v1.0.zip -Algorithm SHA256
 ```
 
 ```bash
